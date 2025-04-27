@@ -1,0 +1,39 @@
+graph TD;
+    A[Minecraft Server] -->|RCON/HTTP| B[GDMC HTTP Interface]
+    B -->|Block Manipulation| C[GDPC Library]
+    C -->|Get/Set Blocks| D[World Data]
+    C -->|Get Player Position| E[Player Data]
+    
+    A -->|API Requests| F[FastMCP Server]
+    F -->|User Management| G[Supabase Auth]
+    F -->|Template Management| H[Supabase Database]
+    H -->|Store Templates| I[Storage Buckets]
+    
+    F -->|Real-time Updates| J[WebSocket Connection]
+    
+    subgraph World Generation
+        K[Terrain Generators]
+        L[Biome Managers]
+        M[Structure Placement]
+        N[Procedural Generation]
+    end
+    
+    C --> K
+    C --> L
+    C --> M
+    C --> N
+    
+    style A fill:#f9f,stroke:#333,stroke-width:2px;
+    style B fill:#ccf,stroke:#333,stroke-width:2px;
+    style C fill:#cfc,stroke:#333,stroke-width:2px;
+    style D fill:#fff,stroke:#333,stroke-width:2px;
+    style E fill:#fff,stroke:#333,stroke-width:2px;
+    style F fill:#ccf,stroke:#333,stroke-width:2px;
+    style G fill:#fff,stroke:#333,stroke-width:2px;
+    style H fill:#fff,stroke:#333,stroke-width:2px;
+    style I fill:#fff,stroke:#333,stroke-width:2px;
+    style J fill:#fff,stroke:#333,stroke-width:2px;
+    style K fill:#fff,stroke:#333,stroke-width:2px;
+    style L fill:#fff,stroke:#333,stroke-width:2px;
+    style M fill:#fff,stroke:#333,stroke-width:2px;
+    style N fill:#fff,stroke:#333,stroke-width:2px;
