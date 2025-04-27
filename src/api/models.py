@@ -151,3 +151,30 @@ class ErrorDetail(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorDetail
+
+
+# --- Authentication Models ---
+
+class UserRegisterRequest(BaseModel):
+    """Request model for user registration."""
+    email: str = Field(..., example="user@example.com")
+    password: str = Field(..., min_length=6, example="securepassword")
+    username: str = Field(..., min_length=3, example="minecraft_builder")
+
+class UserResponse(BaseModel):
+    """Response model for user details."""
+    id: str # UUID as string
+    email: str
+    username: str
+    created_at: str # ISO 8601 format
+
+class AuthResponse(BaseModel):
+    """Response model for successful authentication (login/register)."""
+    user: UserResponse
+    access_token: str
+    token_type: str = "bearer"
+
+class UserLoginRequest(BaseModel):
+    """Request model for user login."""
+    email: str = Field(..., example="user@example.com")
+    password: str = Field(..., example="securepassword")

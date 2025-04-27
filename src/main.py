@@ -50,13 +50,13 @@ async def generic_exception_handler(request: Request, exc: Exception):
 
 # --- Routers ---
 # Import and include API routers
-from .api import status_router
-# from .api import world_router, template_router, auth_router # Placeholder for future routers
+from .api import status_router, auth_router # Import auth_router
+# from .api import world_router, template_router # Placeholder for future routers
 
 app.include_router(status_router.router, prefix="/v1", tags=["Status"]) # Add status router
+app.include_router(auth_router.router, prefix="/v1/auth", tags=["Authentication"]) # Add auth router
 # app.include_router(world_router.router, prefix="/v1/worlds", tags=["Worlds"])
 # app.include_router(template_router.router, prefix="/v1/templates", tags=["Templates"])
-# app.include_router(auth_router.router, prefix="/v1/auth", tags=["Authentication"])
 
 # --- Root Endpoint ---
 # Keep the root endpoint for basic accessibility check
@@ -69,7 +69,9 @@ async def read_root():
 @app.on_event("startup")
 async def startup_event():
     logger.info("Starting Minecraft MCP Server...")
-    # Initialize resources like database connections, GDPC connection manager, etc.
+    # Initialize resources like database connections, GDPC connection manager, Supabase client, etc.
+
+    # Initialize GDPC Connection Manager
     try:
         from .gdpc_interface import ConnectionManager
         app.state.gdpc_conn_manager = ConnectionManager()
@@ -83,6 +85,21 @@ async def startup_event():
     except Exception as e:
         logger.error(f"Error initializing GDPC Connection Manager: {e}", exc_info=True)
         app.state.gdpc_conn_manager = None
+
+    # Initialize Supabase Client
+    try:
+        from .supabase.client import init_supabase_client
+        app.state.supabase_client = await init_supabase_client()
+        if app.state.supabase_client is None:
+             logger.warning("Failed to initialize Supabase client. Check environment variables (SUPABASE_URL, SUPABASE_KEY).")
+        else:
+             logger.info("Supabase client initialized successfully.")
+    except ImportError:
+        logger.error("Could not import init_supabase_client. Ensure supabase package is correctly structured.")
+        app.state.supabase_client = None
+    except Exception as e:
+        logger.error(f"Error initializing Supabase client: {e}", exc_info=True)
+        app.state.supabase_client = None
 
 @app.on_event("shutdown")
 async def shutdown_event():
