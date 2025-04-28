@@ -21,51 +21,95 @@ from unittest.mock import AsyncMock, patch, MagicMock # Import MagicMock
 # Mock the get_client dependency
 @pytest.fixture
 def mock_get_client():
+    # Create a properly structured mock Supabase client
     mock_client = MagicMock()
     
-    # Mock the auth methods used in auth_router
-    mock_client = MagicMock()
-
-    # Mock the return value of sign_up
+    # --- Mock auth.sign_up ---
     mock_signup_response = MagicMock()
-    mock_signup_response.user = MagicMock()
-    mock_signup_response.user.id = "test_user_id"
-    mock_signup_response.user.email = "test@example.com"
-    mock_signup_response.user.user_metadata = {"username": "testuser"}
-    mock_signup_response.user.created_at = "2023-01-01T00:00:00+00:00"
-    mock_signup_response.session = MagicMock()
-    mock_signup_response.session.access_token = "mock_access_token"
-
-    mock_client.auth.sign_up = MagicMock(return_value=mock_signup_response) # Use MagicMock directly
-
-    # Mock the return value of sign_in_with_password
+    mock_signup_user = MagicMock()
+    mock_signup_user.id = "test_user_id"
+    # Use a string value instead of a MagicMock
+    mock_signup_user.email = ""  # Will be set dynamically
+    mock_signup_user.user_metadata = {"username": "testuser"}
+    mock_signup_user.created_at = "2023-01-01T00:00:00+00:00"
+    
+    mock_signup_session = MagicMock()
+    mock_signup_session.access_token = "mock_access_token"
+    
+    mock_signup_response.user = mock_signup_user
+    mock_signup_response.session = mock_signup_session
+    
+    # Configure sign_up to return the mock response
+    mock_client.auth.sign_up = MagicMock(return_value=mock_signup_response)
+    
+    # --- Mock auth.sign_in_with_password ---
     mock_signin_response = MagicMock()
-    mock_signin_response.user = MagicMock()
-    mock_signin_response.user.id = "test_user_id"
-    mock_signin_response.user.email = "test@example.com"
-    mock_signin_response.user.user_metadata = {"username": "testuser"}
-    mock_signin_response.user.created_at = "2023-01-01T00:00:00+00:00"
-    mock_signin_response.session = MagicMock()
-    mock_signin_response.session.access_token = "mock_access_token"
-
-    mock_client.auth.sign_in_with_password = MagicMock(return_value=mock_signin_response) # Use MagicMock directly
-
-    # Mock the get_user method within the mocked Supabase client (not async)
-    mock_client.auth.get_user = MagicMock()
-
-    # Mock the return value of get_user to have a user_metadata attribute
+    mock_signin_user = MagicMock()
+    mock_signin_user.id = "test_user_id"
+    mock_signin_user.email = ""  # Will be set dynamically as string
+    mock_signin_user.user_metadata = {"username": "testuser"}
+    mock_signin_user.created_at = "2023-01-01T00:00:00+00:00"
+    
+    mock_signin_session = MagicMock()
+    mock_signin_session.access_token = "mock_access_token"
+    
+    mock_signin_response.user = mock_signin_user
+    mock_signin_response.session = mock_signin_session
+    
+    # Configure sign_in_with_password to return the mock response with dynamic email
+    def sign_in_side_effect(data):
+        global access_token
+        # Set the email dynamically to match the requested email
+        mock_signin_user.email = data.get("email")
+        # Check for wrong password
+        if data.get("password") != test_user_password:
+            from gotrue.errors import AuthApiError
+            raise AuthApiError(message="Invalid login credentials", status=401, code="invalid_credentials")
+        # Set the global access_token upon successful login
+        access_token = mock_signin_session.access_token
+        return mock_signin_response
+    
+    mock_client.auth.sign_in_with_password = MagicMock(side_effect=sign_in_side_effect)
+    
+    # --- Mock auth.get_user ---
+    mock_user_response = MagicMock()
     mock_user = MagicMock()
     mock_user.id = "test_user_id"
-    mock_user.email = "test@example.com"
+    # Use the same email as the sign-in user
+    mock_user.email = mock_signin_user.email
     mock_user.user_metadata = {"username": "testuser"}
-    mock_user.created_at = "2023-01-01T00:00:00+00:00" # Add created_at
-
-    mock_user_response = MagicMock()
+    mock_user.created_at = "2023-01-01T00:00:00+00:00"
+    
     mock_user_response.user = mock_user
-
-    mock_client.auth.get_user.return_value = mock_user_response
-
-    return mock_client # Return the mock client for dependency override
+    
+    # Configure get_user to return the mock response or raise error for invalid token
+    def get_user_side_effect(token):
+        if token == "invalidtoken123":
+            from gotrue.errors import AuthApiError
+            raise AuthApiError(message="Invalid token", status=401, code="invalid_token")
+        # Set the email dynamically to match the registered user's email
+        mock_user.email = test_user_email
+        return mock_user_response
+    
+    mock_client.auth.get_user = MagicMock(side_effect=get_user_side_effect)
+    
+    # Configure auth.sign_up to raise AuthApiError for duplicate email test
+    def sign_up_side_effect(data):
+        global test_user_email
+        # Check if test_user_email is already set (meaning a user was registered in a previous test)
+        if test_user_email and data.get("email") == test_user_email:
+            from gotrue.errors import AuthApiError
+            raise AuthApiError(message="User already registered", status=409, code="23505")
+        # Set the global test_user_email upon successful registration
+        test_user_email = data.get("email")
+        mock_signup_user.email = test_user_email
+        return mock_signup_response
+    
+    # Store the original function
+    original_sign_up = mock_client.auth.sign_up
+    mock_client.auth.sign_up.side_effect = sign_up_side_effect
+    
+    return mock_client
 
 # Override the get_client dependency for auth tests
 @pytest.fixture(autouse=True)
@@ -80,13 +124,13 @@ def test_register_user(api_client: TestClient):
     Tests user registration via the /auth/register endpoint.
     """
     global test_user_email
-    # Use a simpler email format for testing
-    test_user_email = f"testuser_{uuid.uuid4().hex[:8]}@example.com"
-    print(f"Attempting to register user: {test_user_email}")
+    # Generate a unique email for this registration attempt
+    current_test_email = f"testuser_{uuid.uuid4().hex[:8]}@example.com"
+    print(f"Attempting to register user: {current_test_email}")
 
     response = api_client.post(
         "/v1/auth/register",
-        json={"email": test_user_email, "password": test_user_password, "username": f"testuser_{uuid.uuid4().hex[:6]}"},
+        json={"email": current_test_email, "password": test_user_password, "username": f"testuser_{uuid.uuid4().hex[:6]}"},
     )
 
     print(f"Register response status: {response.status_code}")
@@ -95,13 +139,13 @@ def test_register_user(api_client: TestClient):
     except Exception:
         print(f"Register response text: {response.text}")
 
-
     assert response.status_code == 201, f"Expected 201, got {response.status_code}. Response: {response.text}"
     data = response.json()
-    assert data["user"]["email"] == test_user_email
+    # The mock should set test_user_email upon successful registration
+    assert data["user"]["email"] == current_test_email
     assert "id" in data["user"]
     assert "password" not in data["user"] # Ensure password is not returned
-    print(f"Successfully registered user: {test_user_email}")
+    print(f"Successfully registered user: {current_test_email}")
 
 
 def test_register_duplicate_user(api_client: TestClient):

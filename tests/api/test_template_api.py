@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from src.main import app # Assuming your FastAPI app instance is in main.py
 from src.api import template_router
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock
 
 # Mock the SupabaseManager
 @pytest.fixture(autouse=True)
@@ -29,10 +29,32 @@ def mock_supabase_manager():
 client = TestClient(app)
 
 # Mock the get_current_user dependency
-def override_get_current_user():
-    return {"id": "test_user_id", "email": "test@example.com"} # Mock user object
+@pytest.fixture
+def mock_current_user():
+    # Create a more complete mock user similar to what Supabase would return
+    mock_user = MagicMock()
+    mock_user.id = "test_user_id"
+    mock_user.email = "test@example.com"
+    mock_user.user_metadata = {"username": "testuser"}
+    mock_user.created_at = "2023-01-01T00:00:00+00:00"
+    
+    # For dictionary access compatibility
+    mock_user.__getitem__ = lambda self, key: {
+        "id": self.id,
+        "email": self.email,
+        "username": self.user_metadata.get("username")
+    }.get(key)
+    
+    # Override the dependency in the app
+    app.dependency_overrides[template_router.get_current_user] = lambda: mock_user
+    yield mock_user
+    # Clear the override after the test
+    app.dependency_overrides.clear()
 
-app.dependency_overrides[template_router.get_current_user] = override_get_current_user
+# Apply the fixture to all tests
+@pytest.fixture(autouse=True)
+def setup_auth(mock_current_user):
+    yield
 
 def test_get_templates(mock_supabase_manager):
     mock_supabase_manager.get_templates.return_value = [{"id": "1", "title": "Test Template"}]

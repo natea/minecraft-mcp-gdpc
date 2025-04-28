@@ -36,13 +36,13 @@ async def upload_blueprint(
         else:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to upload blueprint",
+                detail={"error": {"code": "UPLOAD_FAILED", "message": "Failed to upload blueprint"}}
             )
     except Exception as e:
         logger.error(f"Error uploading blueprint: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during blueprint upload",
+            detail={"error": {"code": "UPLOAD_FAILED", "message": "Failed to upload blueprint"}}
         )
 
 @router.get("/blueprints/download/{file_path:path}")
@@ -64,15 +64,15 @@ async def download_blueprint(
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Blueprint not found",
+                detail={"error": {"code": "NOT_FOUND", "message": "Blueprint not found"}}
             )
     except Exception as e:
         logger.error(f"Error downloading blueprint {file_path}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during blueprint download",
+            detail={"error": {"code": "DOWNLOAD_FAILED", "message": "Failed to download blueprint"}}
         )
-
+    
 @router.get("/blueprints/list/")
 async def list_blueprints(
     path: Optional[str] = None,
@@ -91,13 +91,13 @@ async def list_blueprints(
         else:
              raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to list blueprints",
+                detail={"error": {"code": "LIST_FAILED", "message": "Failed to list blueprints"}}
             )
     except Exception as e:
         logger.error(f"Error listing blueprints in path {path}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during blueprint listing",
+            detail={"error": {"code": "LIST_FAILED", "message": "Failed to list blueprints"}}
         )
 
 @router.delete("/blueprints/delete/")
@@ -118,13 +118,13 @@ async def delete_blueprints(
         else:
              raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to delete blueprints",
+                detail={"error": {"code": "DELETE_FAILED", "message": "Failed to delete blueprints"}}
             )
     except Exception as e:
         logger.error(f"Error deleting blueprints {file_paths}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during blueprint deletion",
+            detail={"error": {"code": "DELETE_FAILED", "message": "Failed to delete blueprints"}}
         )
 
 @router.post("/assets/upload/")
@@ -146,13 +146,13 @@ async def upload_asset(
         else:
              raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to upload asset",
+                detail={"error": {"code": "UPLOAD_FAILED", "message": "Failed to upload asset"}}
             )
     except Exception as e:
         logger.error(f"Error uploading asset: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during asset upload",
+            detail={"error": {"code": "UPLOAD_FAILED", "message": "Failed to upload asset"}}
         )
 
 @router.get("/assets/download/{file_path:path}")
@@ -173,15 +173,15 @@ async def download_asset(
         else:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Asset not found",
+                detail={"error": {"code": "NOT_FOUND", "message": "Asset not found"}}
             )
     except Exception as e:
         logger.error(f"Error downloading asset {file_path}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during asset download",
+            detail={"error": {"code": "DOWNLOAD_FAILED", "message": "Failed to download asset"}}
         )
-
+    
 @router.get("/assets/list/")
 async def list_assets(
     path: Optional[str] = None,
@@ -200,13 +200,13 @@ async def list_assets(
         else:
              raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to list assets",
+                detail={"error": {"code": "LIST_FAILED", "message": "Failed to list assets"}}
             )
     except Exception as e:
         logger.error(f"Error listing assets in path {path}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during asset listing",
+            detail={"error": {"code": "LIST_FAILED", "message": "Failed to list assets"}}
         )
 
 @router.delete("/assets/delete/")
@@ -227,11 +227,11 @@ async def delete_assets(
         else:
              raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to delete assets",
+                detail={"error": {"code": "DELETE_FAILED", "message": "Failed to delete assets"}}
             )
     except Exception as e:
         logger.error(f"Error deleting assets {file_paths}: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="An error occurred during asset deletion",
+            detail={"error": {"code": "DELETE_FAILED", "message": "Failed to delete assets"}}
         )

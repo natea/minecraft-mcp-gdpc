@@ -179,6 +179,8 @@ class AuthResponse(BaseModel):
 class UserLoginRequest(BaseModel):
     """Request model for user login."""
     email: str = Field(..., example="user@example.com")
+    password: str = Field(..., example="securepassword")
+
 # --- Template Models ---
 
 class TemplateBase(BaseModel):
@@ -243,4 +245,3 @@ class UserFavoriteResponse(BaseModel):
 
     class Config:
         orm_mode = True
-    password: str = Field(..., example="securepassword")
