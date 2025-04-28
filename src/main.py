@@ -91,7 +91,7 @@ async def startup_event():
 
     # Initialize Supabase Client
     try:
-        from .supabase.client import init_supabase_client
+        from .supabase_api.client import init_supabase_client
         app.state.supabase_client = await init_supabase_client()
         if app.state.supabase_client is None:
              logger.warning("Failed to initialize Supabase client. Check environment variables (SUPABASE_URL, SUPABASE_KEY).")

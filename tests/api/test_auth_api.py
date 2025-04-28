@@ -14,6 +14,22 @@ def generate_unique_email():
     """Generates a unique email address using a timestamp and UUID."""
     return f"testuser_{int(time.time())}_{uuid.uuid4().hex[:6]}@example.com"
 
+from src.main import app # Assuming your FastAPI app instance is in main.py
+
+from unittest.mock import AsyncMock, patch
+
+# Mock the SupabaseManager
+@pytest.fixture(autouse=True)
+def mock_supabase_manager():
+    with patch('src.supabase_api.SupabaseManager') as MockSupabaseManager:
+        mock_instance = MockSupabaseManager.return_value
+        # Mock methods used in auth_router
+        mock_instance.get_client = AsyncMock() # Assuming get_client is used to get the client for auth operations
+        mock_instance.sign_up = AsyncMock()
+        mock_instance.sign_in = AsyncMock()
+        # Add other mocked methods as needed for auth tests
+        yield mock_instance
+
 def test_register_user(api_client: TestClient):
     """
     Tests user registration via the /auth/register endpoint.

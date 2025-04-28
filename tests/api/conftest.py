@@ -27,7 +27,16 @@ else:
 
 # Import the FastAPI app *after* loading environment variables
 # to ensure Supabase client uses the correct (potentially overridden) credentials
-from src.main import app
+import importlib
+
+# Use importlib to dynamically import the app
+try:
+    main_module = importlib.import_module("src.main")
+    app = main_module.app
+except ImportError as e:
+    print(f"Error importing app from src.main: {e}")
+    # Handle the error appropriately, maybe raise it or set app to None
+    app = None # Set app to None to allow collection to proceed and fail tests gracefully
 
 @pytest.fixture(scope="session")
 def api_client():

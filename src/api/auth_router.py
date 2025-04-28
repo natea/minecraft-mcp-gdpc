@@ -14,7 +14,7 @@ from .models import (
     UserResponse,
     ErrorResponse,
 )
-from ..supabase.client import get_supabase_client # Assuming get_supabase_client is async
+from ..supabase_api import SupabaseManager
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +30,20 @@ router = APIRouter(
 # --- Helper to get Supabase client ---
 # Using Depends for dependency injection in endpoints
 async def get_client(request: Request) -> Client:
-    client = request.app.state.supabase_client
-    if client is None:
-        logger.error("Supabase client not initialized.")
+    supabase_manager: SupabaseManager = request.app.state.supabase_manager
+    if supabase_manager is None:
+        logger.error("SupabaseManager not initialized.")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"error": {"code": "SUPABASE_UNAVAILABLE", "message": "Supabase client not available."}}
+            detail={"error": {"code": "SUPABASE_MANAGER_UNAVAILABLE", "message": "Supabase manager not available."}}
         )
+    client = await supabase_manager.get_client()
+    if client is None:
+         logger.error("Supabase client not initialized via manager.")
+         raise HTTPException(
+             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+             detail={"error": {"code": "SUPABASE_CLIENT_UNAVAILABLE", "message": "Supabase client not available."}}
+         )
     return client
 
 # --- Authentication Endpoints ---
@@ -155,7 +162,7 @@ async def login_user(
 # --- Placeholder for JWT Dependency and /user endpoint ---
 # Actual JWT validation logic needs to be implemented here
 # This is a simplified placeholder
-async def get_current_user(request: Request, supabase: Client = Depends(get_client)):
+async def get_current_user(request: Request, supabase: 'Client' = Depends(get_client)):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")

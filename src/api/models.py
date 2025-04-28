@@ -4,6 +4,8 @@ Pydantic models for API request and response validation.
 
 from typing import List, Optional, Tuple, Dict, Any
 from pydantic import BaseModel, Field, validator
+import uuid
+from datetime import datetime
 
 
 # --- Status Models ---

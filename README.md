@@ -26,9 +26,10 @@ The system enables programmatic creation and manipulation of Minecraft worlds, i
 ### Prerequisites
 
 - Python 3.9+
-- Minecraft Java Edition with Fabric (1.19.4 recommended)
-- GDMC HTTP Interface mod
-- Supabase account
+- Minecraft Java Edition with [Fabric](https://fabricmc.net/) (1.19.4 recommended)
+- [Fabric API mod](https://modrinth.com/mod/fabric-api)
+- [GDMC HTTP Interface mod](https://github.com/Niels-NTG/gdmc_http_interface)
+- [Supabase](https://supabase.com) account
 
 ### Installation
 
@@ -74,8 +75,8 @@ The system enables programmatic creation and manipulation of Minecraft worlds, i
 
 The system follows a modular architecture with clear separation of concerns:
 
-1. **FastMCP Server Layer**: API gateway, authentication, and request handling
-2. **GDPC Integration Layer**: Interface with Minecraft worlds
+1. **FastMCP Server Layer**: API gateway, authentication, and request handling (see [FastMCP](https://gofastmcp.com))
+2. **GDPC Integration Layer**: Interface with Minecraft worlds (see [GDPC Python library](https://github.com/avdstaaij/gdpc))
 3. **Supabase Integration Layer**: Database, auth, and storage
 4. **World Generation Features**: Terrain algorithms and biome management
 5. **Structure Building System**: Blueprint format and component library
