@@ -30,21 +30,16 @@ router = APIRouter(
 # --- Helper to get Supabase client ---
 # Using Depends for dependency injection in endpoints
 async def get_client(request: Request) -> Client:
-    supabase_manager: SupabaseManager = request.app.state.supabase_manager
-    if supabase_manager is None:
-        logger.error("SupabaseManager not initialized.")
+    """Dependency to get the Supabase client instance."""
+    # Access the Supabase client instance stored in the app state
+    supabase_client: Client = request.app.state.supabase_client
+    if supabase_client is None:
+        logger.error("Supabase client not initialized.")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail={"error": {"code": "SUPABASE_MANAGER_UNAVAILABLE", "message": "Supabase manager not available."}}
+            detail={"error": {"code": "SUPABASE_CLIENT_UNAVAILABLE", "message": "Supabase client not available."}}
         )
-    client = await supabase_manager.get_client()
-    if client is None:
-         logger.error("Supabase client not initialized via manager.")
-         raise HTTPException(
-             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-             detail={"error": {"code": "SUPABASE_CLIENT_UNAVAILABLE", "message": "Supabase client not available."}}
-         )
-    return client
+    return supabase_client
 
 # --- Authentication Endpoints ---
 

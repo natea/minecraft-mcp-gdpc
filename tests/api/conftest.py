@@ -38,11 +38,11 @@ except ImportError as e:
     # Handle the error appropriately, maybe raise it or set app to None
     app = None # Set app to None to allow collection to proceed and fail tests gracefully
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="function") # Change scope to function
 def api_client():
     """
     Provides a FastAPI TestClient instance for making requests to the API.
-    Scope is 'session' to reuse the client across all tests in the session.
+    Scope is 'function' to ensure a fresh client for each test.
     """
     with TestClient(app) as client:
         print("TestClient created.")

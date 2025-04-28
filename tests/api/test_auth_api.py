@@ -16,19 +16,64 @@ def generate_unique_email():
 
 from src.main import app # Assuming your FastAPI app instance is in main.py
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, patch, MagicMock # Import MagicMock
 
-# Mock the SupabaseManager
+# Mock the get_client dependency
+@pytest.fixture
+def mock_get_client():
+    mock_client = MagicMock()
+    
+    # Mock the auth methods used in auth_router
+    mock_client = MagicMock()
+
+    # Mock the return value of sign_up
+    mock_signup_response = MagicMock()
+    mock_signup_response.user = MagicMock()
+    mock_signup_response.user.id = "test_user_id"
+    mock_signup_response.user.email = "test@example.com"
+    mock_signup_response.user.user_metadata = {"username": "testuser"}
+    mock_signup_response.user.created_at = "2023-01-01T00:00:00+00:00"
+    mock_signup_response.session = MagicMock()
+    mock_signup_response.session.access_token = "mock_access_token"
+
+    mock_client.auth.sign_up = MagicMock(return_value=mock_signup_response) # Use MagicMock directly
+
+    # Mock the return value of sign_in_with_password
+    mock_signin_response = MagicMock()
+    mock_signin_response.user = MagicMock()
+    mock_signin_response.user.id = "test_user_id"
+    mock_signin_response.user.email = "test@example.com"
+    mock_signin_response.user.user_metadata = {"username": "testuser"}
+    mock_signin_response.user.created_at = "2023-01-01T00:00:00+00:00"
+    mock_signin_response.session = MagicMock()
+    mock_signin_response.session.access_token = "mock_access_token"
+
+    mock_client.auth.sign_in_with_password = MagicMock(return_value=mock_signin_response) # Use MagicMock directly
+
+    # Mock the get_user method within the mocked Supabase client (not async)
+    mock_client.auth.get_user = MagicMock()
+
+    # Mock the return value of get_user to have a user_metadata attribute
+    mock_user = MagicMock()
+    mock_user.id = "test_user_id"
+    mock_user.email = "test@example.com"
+    mock_user.user_metadata = {"username": "testuser"}
+    mock_user.created_at = "2023-01-01T00:00:00+00:00" # Add created_at
+
+    mock_user_response = MagicMock()
+    mock_user_response.user = mock_user
+
+    mock_client.auth.get_user.return_value = mock_user_response
+
+    return mock_client # Return the mock client for dependency override
+
+# Override the get_client dependency for auth tests
 @pytest.fixture(autouse=True)
-def mock_supabase_manager():
-    with patch('src.supabase_api.SupabaseManager') as MockSupabaseManager:
-        mock_instance = MockSupabaseManager.return_value
-        # Mock methods used in auth_router
-        mock_instance.get_client = AsyncMock() # Assuming get_client is used to get the client for auth operations
-        mock_instance.sign_up = AsyncMock()
-        mock_instance.sign_in = AsyncMock()
-        # Add other mocked methods as needed for auth tests
-        yield mock_instance
+def override_get_client(mock_get_client):
+    from src.api import auth_router
+    app.dependency_overrides[auth_router.get_client] = lambda: mock_get_client
+    yield
+    app.dependency_overrides.clear() # Clear overrides after each test
 
 def test_register_user(api_client: TestClient):
     """
