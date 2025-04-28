@@ -6,7 +6,7 @@ import logging
 from typing import List, Optional, Union, Tuple
 
 from gdpc.vector_tools import Vec3iLike, Box, Rect, ivec3
-from gdpc.exceptions import RequestConnectionError
+from gdpc.exceptions import InterfaceConnectionError
 
 from .connection import ConnectionManager
 
@@ -48,7 +48,7 @@ class BlockOperations:
                 # Assuming the result is a flat list for the box
                 return blocks[0]
             return None
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error getting block at {pos}: {e}")
             return None
         except Exception as e:
@@ -77,7 +77,7 @@ class BlockOperations:
             # The underlying gdpc function returns the response text, not a boolean.
             # We assume success if no exception is raised.
             return True
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error setting block at {pos}: {e}")
             return False
         except Exception as e:
@@ -98,7 +98,7 @@ class BlockOperations:
             blocks = self.conn.get_blocks(box)
             logger.debug(f"Retrieved {len(blocks)} blocks from box {box}.")
             return blocks
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error getting blocks in box {box}: {e}")
             return None
         except Exception as e:
@@ -139,7 +139,7 @@ class BlockOperations:
             result = self.conn.place_blocks(start.x, start.y, start.z, end.x, end.y, end.z, block_list, doBlockUpdates=do_block_updates)
             logger.debug(f"Set blocks in box {box}. Result: {result}")
             return True
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error setting blocks in box {box}: {e}")
             return False
         except Exception as e:

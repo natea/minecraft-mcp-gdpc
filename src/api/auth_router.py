@@ -4,7 +4,7 @@ API Router for user authentication (registration, login).
 
 import logging
 from fastapi import APIRouter, Request, HTTPException, status, Depends
-from supabase_py_async import AsyncClient
+from supabase import Client
 from gotrue.errors import AuthApiError
 
 from .models import (
@@ -29,7 +29,7 @@ router = APIRouter(
 
 # --- Helper to get Supabase client ---
 # Using Depends for dependency injection in endpoints
-async def get_client(request: Request) -> AsyncClient:
+async def get_client(request: Request) -> Client:
     client = request.app.state.supabase_client
     if client is None:
         logger.error("Supabase client not initialized.")
@@ -49,18 +49,18 @@ async def get_client(request: Request) -> AsyncClient:
 )
 async def register_user(
     user_data: UserRegisterRequest,
-    supabase: AsyncClient = Depends(get_client)
+    supabase: Client = Depends(get_client)
 ):
     """Registers a new user with email, password, and username."""
     try:
         # Supabase sign_up requires email and password.
         # Username is typically stored in user_metadata or a separate profiles table.
-        res = await supabase.auth.sign_up(
-            email=user_data.email,
-            password=user_data.password,
+        res = supabase.auth.sign_up({
+            "email": user_data.email,
+            "password": user_data.password,
             # Store username in user_metadata during signup
-            options={"data": {"username": user_data.username}}
-        )
+            "options": {"data": {"username": user_data.username}}
+        })
 
         if res.user is None or res.session is None:
              # Handle cases where signup might succeed but user/session is null (e.g., email verification required)
@@ -109,14 +109,14 @@ async def register_user(
 )
 async def login_user(
     login_data: UserLoginRequest,
-    supabase: AsyncClient = Depends(get_client)
+    supabase: Client = Depends(get_client)
 ):
     """Logs in a user with email and password."""
     try:
-        res = await supabase.auth.sign_in_with_password(
-            email=login_data.email,
-            password=login_data.password,
-        )
+        res = supabase.auth.sign_in_with_password({
+            "email": login_data.email,
+            "password": login_data.password,
+        })
 
         if res.user is None or res.session is None:
              logger.error(f"Login failed for {login_data.email}: User or session is null.")
@@ -155,13 +155,13 @@ async def login_user(
 # --- Placeholder for JWT Dependency and /user endpoint ---
 # Actual JWT validation logic needs to be implemented here
 # This is a simplified placeholder
-async def get_current_user(request: Request, supabase: AsyncClient = Depends(get_client)):
+async def get_current_user(request: Request, supabase: Client = Depends(get_client)):
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     token = auth_header.split(" ")[1]
     try:
-        user_response = await supabase.auth.get_user(token)
+        user_response = supabase.auth.get_user(token)
         if user_response.user is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token or user not found")
         return user_response.user

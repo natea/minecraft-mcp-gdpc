@@ -1,0 +1,123 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "minecraft-mcp-gdpc"
+version = "0.1.0"
+description = "Minecraft MCP GDPC project with FastAPI backend"
+readme = "README.md"
+requires-python = ">=3.8" # Assuming Python 3.8+, adjust if needed
+license = {text = "MIT"} # Or choose appropriate license
+authors = [
+  {name = "Your Name", email = "your.email@example.com"}, # Replace with actual details
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Framework :: FastAPI",
+]
+dependencies = [
+    "fastapi>=0.95.0",
+    "uvicorn>=0.22.0",
+    "pydantic>=2.0.0",
+    "gdpc>=8.1.0",
+    "supabase>=1.0.0", # Supabase client with both sync and async support
+    "python-dotenv>=1.0.0",
+    "httpx>=0.24.0",
+    "websockets>=11.0.0",
+    "redis>=4.5.0",
+    "celery>=5.3.0",
+    "asyncpg>=0.27.0",
+    "sqlalchemy>=2.0.0",
+    "alembic>=1.10.0",
+    "python-jose>=3.3.0",
+    "passlib[bcrypt]>=1.7.4", # Include bcrypt extra for passlib
+    "numpy>=1.24.0",
+    "pillow>=9.5.0",
+    "more-itertools>=9.1.0",
+"nbtlib>=1.12.0", # Added based on test_structure_operations.py import
+    "pyyaml>=6.0.0",
+    "jinja2>=3.1.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.3.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.10.0",
+    "testcontainers>=3.7.0",
+    # httpx is already a core dependency
+]
+dev = [
+    "black>=23.3.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.2.0",
+    "pre-commit>=3.3.0",
+    # Include test dependencies in dev for convenience
+    "minecraft-mcp-gdpc[test]",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/minecraft-mcp-gdpc" # Replace with actual URL
+Repository = "https://github.com/yourusername/minecraft-mcp-gdpc" # Replace with actual URL
+
+[tool.setuptools.packages.find]
+where = ["src"]  # look for packages in the src directory
+
+[tool.setuptools]
+package-dir = {"" = "src"} # map the root package namespace to the src directory
+
+[tool.black]
+line-length = 88
+target-version = ['py38', 'py39', 'py310', 'py311', 'py312'] # Adjust based on supported Python versions
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+skip_gitignore = true
+known_first_party = ["src"] # Adjust if needed
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = "E203, E501" # E203: whitespace before ':', E501: line too long (handled by black)
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+    ".venv",
+]
+
+[tool.mypy]
+python_version = "3.8" # Set to your minimum supported version
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true # Can be set to false for stricter checks if all libs have types
+exclude = ["venv", "build", "dist"]
+
+# Optional: UV specific configuration (if needed)
+# [tool.uv]
+# ...

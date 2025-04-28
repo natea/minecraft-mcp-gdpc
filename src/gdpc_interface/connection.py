@@ -8,7 +8,7 @@ from functools import partial
 from typing import Optional
 
 from gdpc import interface
-from gdpc.exceptions import RequestConnectionError
+from gdpc.exceptions import InterfaceConnectionError
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -16,8 +16,9 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_HOST = os.getenv("MINECRAFT_HOST", "localhost")
-DEFAULT_PORT = int(os.getenv("MINECRAFT_HTTP_PORT", 9000))
+# Remove module-level defaults that rely on os.getenv at import time
+# DEFAULT_HOST = os.getenv("MINECRAFT_HOST", "localhost")
+# DEFAULT_PORT = int(os.getenv("MINECRAFT_HTTP_PORT", 9000))
 
 
 class ConnectionManager:
@@ -33,8 +34,12 @@ class ConnectionManager:
             port: The port number of the GDMC HTTP Interface.
                   Defaults to MINECRAFT_HTTP_PORT environment variable or 9000.
         """
-        self.host = host or DEFAULT_HOST
-        self.port = port or DEFAULT_PORT
+        # Read environment variables inside __init__ to allow mocking os.getenv
+        default_host = os.getenv("MINECRAFT_HOST", "localhost")
+        default_port = int(os.getenv("MINECRAFT_HTTP_PORT", 9000))
+
+        self.host = host or default_host
+        self.port = port or default_port
         logger.info(f"GDPC Interface configured for {self.host}:{self.port}")
 
         # Pre-configure interface functions with host and port
@@ -57,7 +62,7 @@ class ConnectionManager:
             version = self.get_version()
             logger.info(f"Successfully connected to Minecraft server. Version: {version}")
             return True
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Failed to connect to Minecraft server at {self.host}:{self.port}: {e}")
             return False
         except Exception as e:
@@ -69,7 +74,7 @@ class ConnectionManager:
         """Gets the Minecraft server version."""
         try:
             return self.get_version()
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error getting server version: {e}")
             return None
         except Exception as e:

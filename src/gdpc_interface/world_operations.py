@@ -5,8 +5,9 @@ Provides functions for retrieving information about the Minecraft world.
 import logging
 from typing import Optional, Dict, List, Tuple
 
+import gdpc # Import the top-level gdpc module
 from gdpc.vector_tools import Vec3iLike, Box, Rect, ivec3
-from gdpc.exceptions import RequestConnectionError
+from gdpc.exceptions import InterfaceConnectionError
 
 from .connection import ConnectionManager
 
@@ -54,7 +55,7 @@ class WorldOperations:
                 logger.debug(f"Retrieved build area: {box}")
                 return box
             return None
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error getting build area: {e}")
             return None
         except Exception as e:
@@ -73,7 +74,7 @@ class WorldOperations:
             players = self.conn.get_players()
             logger.debug(f"Retrieved player info: {players}")
             return players
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error getting players: {e}")
             return None
         except Exception as e:
@@ -119,10 +120,10 @@ class WorldOperations:
         """
         try:
             # The underlying gdpc function requires host, port, rect, and type
-            heightmap = interface.getHeightmap(self.conn.host, self.conn.port, rect, heightmap_type)
+            heightmap = gdpc.interface.getHeightmap(self.conn.host, self.conn.port, rect, heightmap_type) # Use gdpc.interface
             logger.debug(f"Retrieved heightmap of type '{heightmap_type}' for rect {rect}.")
             return heightmap
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error getting heightmap for {rect}: {e}")
             return None
         except Exception as e:

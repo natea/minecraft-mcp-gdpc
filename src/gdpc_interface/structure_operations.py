@@ -3,11 +3,12 @@ Provides functions for interacting with structures (NBT format) in the Minecraft
 """
 
 import logging
+import io # Import the standard io module
 from typing import Optional, Dict, Any
 
 import nbtlib
 from gdpc.vector_tools import Vec3iLike, Box, ivec3
-from gdpc.exceptions import RequestConnectionError
+from gdpc.exceptions import InterfaceConnectionError
 
 from .connection import ConnectionManager
 
@@ -61,7 +62,7 @@ class StructureOperations:
             # Assuming gdpc interface.placeStructure expects NBT string/bytes
             # Let's check gdpc source or assume it handles nbtlib objects directly
             # Update: gdpc interface.placeStructure expects raw NBT bytes.
-            with nbtlib.BytesIO() as bytes_io:
+            with io.BytesIO() as bytes_io: # Use io.BytesIO
                 nbt_data.write(bytes_io, byteorder='big') # Minecraft uses big-endian
                 nbt_bytes = bytes_io.getvalue()
 
@@ -77,7 +78,7 @@ class StructureOperations:
             )
             logger.debug(f"Placed structure at {pos}. Result: {result}")
             return True
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error placing structure at {pos}: {e}")
             return False
         except Exception as e:
@@ -114,19 +115,19 @@ class StructureOperations:
 
             if nbt_bytes:
                 # Parse the raw bytes using nbtlib
-                with nbtlib.BytesIO(nbt_bytes) as bytes_io:
+                with io.BytesIO(nbt_bytes) as bytes_io: # Use io.BytesIO
                     nbt_data = nbtlib.load(bytes_io, byteorder='big')
                 logger.debug(f"Retrieved structure from box {box}.")
                 return nbt_data # Return parsed nbtlib object
             else:
                 logger.warning(f"Received empty response when getting structure from {box}.")
                 return None
-        except RequestConnectionError as e:
+        except InterfaceConnectionError as e:
             logger.error(f"Connection error getting structure from {box}: {e}")
             return None
-        except nbtlib.MalformedResponseError as e:
-             logger.error(f"Error parsing NBT data received from server for box {box}: {e}")
-             return None
+        except nbtlib.CastError as e: # Try CastError as suggested by traceback
+            logger.error(f"Error parsing NBT data from {box}: {e}")
+            return None
         except Exception as e:
             logger.error(f"Unexpected error getting structure from {box}: {e}")
             return None

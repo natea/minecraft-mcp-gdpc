@@ -6,7 +6,8 @@ import logging
 import os
 from typing import Optional
 
-from supabase_py_async import create_client, AsyncClient
+# Use the official Supabase Python client which supports async operations
+from supabase import create_client, Client
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -18,9 +19,9 @@ supabase_url: Optional[str] = os.getenv("SUPABASE_URL")
 supabase_key: Optional[str] = os.getenv("SUPABASE_KEY")
 supabase_service_key: Optional[str] = os.getenv("SUPABASE_SERVICE_KEY") # For admin operations
 
-supabase_client: Optional[AsyncClient] = None
+supabase_client: Optional[Client] = None
 
-async def init_supabase_client() -> Optional[AsyncClient]:
+async def init_supabase_client() -> Optional[Client]:
     """
     Initializes the Supabase client using environment variables.
 
@@ -37,14 +38,15 @@ async def init_supabase_client() -> Optional[AsyncClient]:
 
     try:
         logger.info(f"Initializing Supabase client for URL: {supabase_url[:20]}...") # Log partial URL
-        supabase_client = await create_client(supabase_url, supabase_key)
+        # Standard Supabase client doesn't use await for creation
+        supabase_client = create_client(supabase_url, supabase_key)
         logger.info("Supabase client initialized successfully.")
         return supabase_client
     except Exception as e:
         logger.error(f"Failed to initialize Supabase client: {e}", exc_info=True)
         return None
 
-async def get_supabase_client() -> AsyncClient:
+async def get_supabase_client() -> Client:
     """
     Returns the initialized Supabase client instance. Initializes if not already done.
 
@@ -59,7 +61,7 @@ async def get_supabase_client() -> AsyncClient:
         raise Exception("Supabase client could not be initialized. Check configuration.")
     return client
 
-async def get_supabase_admin_client() -> AsyncClient:
+async def get_supabase_admin_client() -> Client:
     """
     Returns the initialized Supabase client instance using the service key for admin operations.
 
@@ -74,12 +76,9 @@ async def get_supabase_admin_client() -> AsyncClient:
         raise Exception("Supabase URL or Service Key missing for admin client.")
 
     try:
-        # Note: supabase-py-async might not directly support service key initialization in create_client
-        # We might need to handle headers manually or use a different approach if direct support is lacking.
-        # For now, assuming create_client handles it or we adjust later.
-        # Re-initializing separately for admin might be needed.
+        # Using standard Supabase client with service key
         logger.info("Initializing Supabase admin client...")
-        admin_client = await create_client(supabase_url, supabase_service_key)
+        admin_client = create_client(supabase_url, supabase_service_key)
         logger.info("Supabase admin client initialized successfully.")
         return admin_client
     except Exception as e:
