@@ -54,6 +54,9 @@ from .api import status_router, auth_router # Import auth_router
 # from .api import world_router, template_router # Placeholder for future routers
 
 app.include_router(status_router.router, prefix="/v1", tags=["Status"]) # Add status router
+from .api import template_router # Import template_router
+
+app.include_router(template_router.router, prefix="/v1/templates", tags=["Templates"])
 app.include_router(auth_router.router, prefix="/v1/auth", tags=["Authentication"]) # Add auth router
 # app.include_router(world_router.router, prefix="/v1/worlds", tags=["Worlds"])
 # app.include_router(template_router.router, prefix="/v1/templates", tags=["Templates"])

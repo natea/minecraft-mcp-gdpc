@@ -85,6 +85,25 @@ async def get_supabase_admin_client() -> Client:
         logger.error(f"Failed to initialize Supabase admin client: {e}", exc_info=True)
         raise Exception("Supabase admin client could not be initialized.")
 
+# Authentication methods
+    def sign_up(self, email, password, username):
+        # Create user and profile
+        pass
+
+    def sign_in(self, email, password):
+        # Sign in and return session
+        pass
+
+    # Template methods
+    def get_templates(self, search_term=None, tags=None, limit=20, offset=0):
+        # Get templates with filtering
+        pass
+
+    def create_template(self, template_data):
+        # Create new template
+        pass
+
+    # Additional methods for other tables
 
 # Example usage (can be removed later)
 async def main():

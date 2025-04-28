@@ -177,4 +177,68 @@ class AuthResponse(BaseModel):
 class UserLoginRequest(BaseModel):
     """Request model for user login."""
     email: str = Field(..., example="user@example.com")
+# --- Template Models ---
+
+class TemplateBase(BaseModel):
+    """Base model for templates."""
+    name: str = Field(..., description="The name of the template.")
+    description: Optional[str] = Field(None, description="A brief description of the template.")
+    category: Optional[str] = Field(None, description="The category of the template.")
+    tags: Optional[List[str]] = Field([], description="A list of tags associated with the template.")
+    is_public: Optional[bool] = Field(False, description="Whether the template is publicly visible.")
+
+    @validator('name')
+    def name_must_not_be_empty(cls, v):
+        if not v or not v.strip():
+            raise ValueError('Name cannot be empty')
+        return v.strip()
+
+class TemplateCreate(TemplateBase):
+    """Request model for creating a new template."""
+    schema: Dict[str, Any] = Field(..., description="The template structure in JSONB format.")
+
+class TemplateUpdate(TemplateBase):
+    """Request model for updating an existing template."""
+    schema: Optional[Dict[str, Any]] = Field(None, description="The updated template structure in JSONB format.")
+
+class TemplateResponse(TemplateBase):
+    """Response model for template details."""
+    id: uuid.UUID
+    user_id: uuid.UUID
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        orm_mode = True
+
+class TemplateVersionBase(BaseModel):
+    """Base model for template versions."""
+    version_number: int = Field(..., description="The version number of the template.")
+    schema: Dict[str, Any] = Field(..., description="The template structure for this version in JSONB format.")
+    is_active: Optional[bool] = Field(True, description="Whether this version is the active one.")
+
+class TemplateVersionCreate(TemplateVersionBase):
+    """Request model for creating a new template version."""
+    pass
+
+class TemplateVersionResponse(TemplateVersionBase):
+    """Response model for template version details."""
+    id: uuid.UUID
+    template_id: uuid.UUID
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
+
+# --- User Favorites Model ---
+
+class UserFavoriteResponse(BaseModel):
+    """Response model for user favorite templates."""
+    id: uuid.UUID
+    user_id: uuid.UUID
+    template_id: uuid.UUID
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
     password: str = Field(..., example="securepassword")
