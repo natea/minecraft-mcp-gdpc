@@ -1,5 +1,5 @@
 """
-Tests for the GDPC interface connection functionality.
+Tests for the GDPC interface connection functionality using pytest.
 
 This module tests the connection to the Minecraft server via the GDPC HTTP interface,
 including player detection, command execution, and block placement.
@@ -11,7 +11,6 @@ import requests
 import json
 import pytest
 import os
-import sys
 
 # Add the parent directory to the path so we can import the src module
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -27,9 +26,18 @@ logger = logging.getLogger(__name__)
 MINECRAFT_HOST = "127.0.0.1"
 MINECRAFT_HTTP_PORT = 9000  # The port that works with direct HTTP requests
 
+
+@pytest.fixture
+def minecraft_connection():
+    """Fixture to provide a connection to the Minecraft server."""
+    conn = ConnectionManager()
+    return conn
+
+
 class TestDirectHTTP:
     """Tests for direct HTTP requests to the Minecraft server."""
     
+    @pytest.mark.minecraft
     def test_direct_command(self):
         """Test running commands directly via HTTP."""
         logger.info("Testing direct HTTP commands...")
@@ -64,6 +72,7 @@ class TestDirectHTTP:
             # Assert command was successful
             assert any(item.get('status', 0) == 1 for item in result if isinstance(item, dict)), f"Command {cmd} failed"
     
+    @pytest.mark.minecraft
     def test_direct_block_placement(self):
         """Test placing blocks directly via HTTP."""
         logger.info("Testing direct HTTP block placement...")
@@ -125,31 +134,27 @@ class TestDirectHTTP:
 class TestConnectionManager:
     """Tests for the ConnectionManager class."""
     
-    def test_connection(self):
+    @pytest.mark.minecraft
+    def test_connection(self, minecraft_connection):
         """Test the basic connection functionality."""
         logger.info("Testing ConnectionManager connection...")
         
-        # Initialize the ConnectionManager
-        conn_manager = ConnectionManager()
-        
         # Test connection
-        assert conn_manager.test_connection(), "Failed to connect to Minecraft server"
+        assert minecraft_connection.test_connection(), "Failed to connect to Minecraft server"
         logger.info("Successfully connected to Minecraft server.")
         
         # Test get_version
-        version = conn_manager.get_server_version()
+        version = minecraft_connection.get_server_version()
         assert version is not None, "Failed to get server version"
         logger.info(f"Minecraft server version: {version}")
     
-    def test_player_detection(self):
+    @pytest.mark.minecraft
+    def test_player_detection(self, minecraft_connection):
         """Test player detection functionality."""
         logger.info("Testing player detection...")
         
-        # Initialize the ConnectionManager
-        conn_manager = ConnectionManager()
-        
         # Get players
-        players = conn_manager.get_players()
+        players = minecraft_connection.get_players()
         
         # Improved player detection - handle different response formats
         player_found = False
@@ -199,12 +204,10 @@ class TestConnectionManager:
         # Assert that we found the player
         assert player_found, f"Player '{target_player}' not found"
     
-    def test_command_execution(self):
+    @pytest.mark.minecraft
+    def test_command_execution(self, minecraft_connection):
         """Test command execution functionality."""
         logger.info("Testing command execution...")
-        
-        # Initialize the ConnectionManager
-        conn_manager = ConnectionManager()
         
         # Test command
         cmd = "time set day"
@@ -221,12 +224,10 @@ class TestConnectionManager:
         # Assert command was successful
         assert any(item.get('status', 0) == 1 for item in result if isinstance(item, dict)), f"Command {cmd} failed"
     
-    def test_block_placement(self):
+    @pytest.mark.minecraft
+    def test_block_placement(self, minecraft_connection):
         """Test block placement functionality."""
         logger.info("Testing block placement...")
-        
-        # Initialize the ConnectionManager
-        conn_manager = ConnectionManager()
         
         # Test coordinates - use coordinates that are known to work
         x1, y1, z1 = 0, 65, 0
@@ -246,13 +247,16 @@ class TestConnectionManager:
                         try:
                             # Use direct HTTP request with port 9000 (which is working)
                             cmd = f"setblock {x} {y} {z} {block_type}"
+                            logger.info(f"Executing setblock command: {cmd}")
                             response = requests.post(
                                 f"http://{MINECRAFT_HOST}:{MINECRAFT_HTTP_PORT}/command?dimension=overworld",
                                 data=cmd
                             )
                             result = json.loads(response.text)
+                            logger.info(f"Result for {x},{y},{z}: {result}")
                             if result and any(item.get('status', 0) == 1 for item in result if isinstance(item, dict)):
                                 blocks_placed += 1
+                                logger.info(f"Block placed at {x},{y},{z}")
                         except Exception as e:
                             logger.warning(f"Error placing block at ({x},{y},{z}): {e}")
             return blocks_placed
@@ -269,16 +273,3 @@ class TestConnectionManager:
         
         # Skip the assertion for now since we're in a test environment
         # assert blocks_placed > 0, "Failed to place any blocks"
-
-
-if __name__ == "__main__":
-    # Run the tests manually
-    test_direct = TestDirectHTTP()
-    test_direct.test_direct_command()
-    test_direct.test_direct_block_placement()
-    
-    test_conn = TestConnectionManager()
-    test_conn.test_connection()
-    test_conn.test_player_detection()
-    test_conn.test_command_execution()
-    test_conn.test_block_placement()
